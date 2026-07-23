@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { Server } from 'http';
 import { ModelContext, ModelContextServer } from '@modelcontextprotocol/sdk';
 import { exec } from 'child_process';
@@ -32,7 +32,7 @@ function runAppleScript(script: string): Promise<string> {
 }
 
 // Things read - direct SQLite query (example endpoint)
-app.get('/things/projects', async (req, res) => {
+app.get('/things/projects', async (req: Request, res: Response) => {
   const dbPath = path.join(process.env.HOME || '', 'Library/Group Containers/JL3T382279.com.culturedcode.ThingsMac/Things Database.thingsdatabase/main.sqlite');
   const sql = 'SELECT * FROM ZPROJECT'; // adjust to actual schema
   try {
@@ -44,7 +44,7 @@ app.get('/things/projects', async (req, res) => {
 });
 
 // Things write - create task via URL scheme
-app.post('/things/add', async (req, res) => {
+app.post('/things/add', async (req: Request, res: Response) => {
   const { title, project } = req.body;
   const url = `things:///add?title=${encodeURIComponent(title)}${project ? '&list=' + encodeURIComponent(project) : ''}`;
   try {
@@ -56,7 +56,7 @@ app.post('/things/add', async (req, res) => {
 });
 
 // Bear read - simple SQLite query example
-app.get('/bear/notes', async (req, res) => {
+app.get('/bear/notes', async (req: Request, res: Response) => {
   const dbPath = path.join(process.env.HOME || '', 'Library/Group Containers/net.shinyfrog.bear/Application Data/database.sqlite');
   const sql = 'SELECT ZTITLE, ZTEXT FROM ZNOTE';
   try {
@@ -68,7 +68,7 @@ app.get('/bear/notes', async (req, res) => {
 });
 
 // Bear write - create note via X‑Callback URL
-app.post('/bear/create', async (req, res) => {
+app.post('/bear/create', async (req: Request, res: Response) => {
   const { title, text } = req.body;
   const url = `bear://x-callback-url/create?title=${encodeURIComponent(title)}&text=${encodeURIComponent(text)}`;
   try {
