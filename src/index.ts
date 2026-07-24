@@ -7,11 +7,28 @@ import path from "path";
 import os from "os";
 import express from "express";
 
-const THINGS_DB_PATH = path.join(
-  os.homedir(),
-  "Library/Group Containers/JLMPQHK86H.com.culturedcode.ThingsMac",
-  "Things Database.thingsdatabase/main.sqlite"
-);
+function findThingsDb(): string {
+  const base = path.join(
+    os.homedir(),
+    "Library/Group Containers/JLMPQHK86H.com.culturedcode.ThingsMac"
+  );
+  const direct = path.join(base, "Things Database.thingsdatabase/main.sqlite");
+  try {
+    require("fs").accessSync(direct);
+    return direct;
+  } catch {}
+  const fs = require("fs");
+  try {
+    const entries = fs.readdirSync(base) as string[];
+    const dataDir = entries.find((e: string) => e.startsWith("ThingsData-"));
+    if (dataDir) {
+      return path.join(base, dataDir, "Things Database.thingsdatabase/main.sqlite");
+    }
+  } catch {}
+  return direct;
+}
+
+const THINGS_DB_PATH = findThingsDb();
 
 const BEAR_DB_PATH = path.join(
   os.homedir(),
