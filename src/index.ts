@@ -1,10 +1,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { z } from "zod";
 import { exec } from "child_process";
 import { Database, OPEN_READONLY } from "sqlite3";
 import path from "path";
 import os from "os";
+import express from "express";
 
 const THINGS_DB_PATH = path.join(
   os.homedir(),
@@ -279,12 +280,30 @@ server.tool(
   }
 );
 
-async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-}
+const app = express();
+const PORT = parseInt(process.env.PORT || "3000", 10);
 
-main().catch((err) => {
-  console.error("Fatal error:", err);
-  process.exit(1);
+const transports: Record<string, SSEServerTransport> = {};
+
+app.get("/sse", async (req, res) => {
+  const transport = new SSEServerTransport("/messages", res);
+  transports[transport.sessionId] = transport;
+  res.on("close", () => {
+    delete transports[transport.sessionId];
+  });
+  await server.connect(transport);
+});
+
+app.post("/messages", async (req, res) => {
+  const sessionId = req.query.sessionId as string;
+  const transport = transports[sessionId];
+  if (!transport) {
+    res.status(400).json({ error: "Unknown session" });
+    return;
+  }
+  await transport.handlePostMessage(req, res);
+});
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`MCP SSE server listening on http://0.0.0.0:${PORT}/sse`);
 });
