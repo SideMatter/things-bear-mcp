@@ -94,7 +94,7 @@ server.tool(
 
     const sql = `
       SELECT TMTask.uuid, TMTask.title, TMTask.notes,
-             TMTask.dueDate, TMTask.startDate,
+             TMTask.deadline, TMTask.startDate, TMTask.start,
              (SELECT title FROM TMTask AS p WHERE p.uuid = TMTask.project) AS projectTitle,
              (SELECT title FROM TMArea WHERE uuid = TMTask.area) AS areaTitle
       FROM TMTask
